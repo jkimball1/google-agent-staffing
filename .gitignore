@@ -1,0 +1,21 @@
+# Secrets
+.env
+
+# Course workbook: local only
+data/raw/*
+!data/raw/README.md
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/

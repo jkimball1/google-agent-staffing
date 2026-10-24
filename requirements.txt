@@ -1,0 +1,13 @@
+# Pin exact versions once the team's environment works (pip freeze).
+pandas>=2.2
+numpy>=1.26
+openpyxl>=3.1          # read the course .xlsx workbook
+matplotlib>=3.8
+jupyter>=1.0
+python-dotenv>=1.0
+pydantic>=2.6
+pytest>=8.0
+
+# GenAI: swap the provider package if the team picks a different LLM
+langchain>=0.3
+langchain-openai>=0.2
