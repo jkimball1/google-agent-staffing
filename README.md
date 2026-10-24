@@ -77,9 +77,9 @@ See [docs/architecture.md](docs/architecture.md) for the diagram and [docs/assum
 | Role | Member | Folder | Branch | Notebook sections |
 |---|---|---|---|---|
 | 1. Data & forecasting | TBD | `src/forecasting/` | `feature/forecasting` | 2 |
-| 2. Staffing simulation | TBD | `src/simulation/` | `feature/simulation` | 3 |
+| 2. Staffing simulation | Mer McFadden (@mcfadd22) | `src/simulation/` | `feature/simulation` | 3 |
 | 3. Optimization & financials | TBD | `src/optimization/` | `feature/optimization` | 4, 5 |
-| 4. GenAI app & notebook integration | TBD | `src/genai/`, `notebooks/` | `feature/genai` | 6 |
+| 4. GenAI app & notebook integration | Enrique Mendez | `src/genai/`, `notebooks/` | `feature/genai` | 6 |
 
 Shared by everyone: sections 1, 7, and 8, documentation for your own module, a segment of the video, and review of other members' PRs.
 

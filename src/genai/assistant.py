@@ -1,6 +1,6 @@
 """Member 4 — GenAI planning assistant.
 
-Owner: TBD
+Owner: Enrique Mendez
 Branch: feature/genai
 
 Flow:

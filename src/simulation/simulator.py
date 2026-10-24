@@ -1,6 +1,6 @@
 """Member 2 — Staffing simulation.
 
-Owner: TBD
+Owner: Mer McFadden
 Branch: feature/simulation
 
 Simulates day by day, summarizes by month. Rules (see docs/assumptions.md):
