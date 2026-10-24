@@ -4,6 +4,7 @@ Owner: TBD
 Branch: feature/simulation
 
 Simulates day by day, summarizes by month. Rules (see docs/assumptions.md):
+  - all agents start 2026 with no advertisers assigned
   - each productive agent supports at most 10 advertisers at a time
   - each advertiser is supported for 60 days, then frees the slot
   - unassigned advertisers wait up to 60 days, then expire (no uplift)

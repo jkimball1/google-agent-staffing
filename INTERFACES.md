@@ -42,12 +42,12 @@ All sample files in `data/sample/` are **synthetic**. Regenerate them with `pyth
 
 ### `country_parameters_df`: one row per country (sample: `sample_country_parameters.csv`)
 
-| Column | Type | Meaning |
-|---|---|---|
-| `country` | str | |
-| `annual_salary_usd` | float | Per agent |
-| `eligibility_threshold_usd` | float | Minimum annual budget to qualify for support |
-| `agents_jan_2026` | int | Starting headcount (January 2026, from workbook) |
+| Column | Type | Meaning | Workbook source |
+|---|---|---|---|
+| `country` | str | | `Country` |
+| `annual_salary_usd` | float | Per agent | Agent Salary and Threshold → `Annual_Agent_Salary_USD` |
+| `eligibility_threshold_usd` | float | Eligible if budget is strictly greater than this | Agent Salary and Threshold → `Advertiser_Eligibility_Threshold_USD` |
+| `agents_jan_2026` | int | Starting headcount | Existing Agent Staffing → `Existing_Agent_Count` |
 
 ### `staffing_plan_df`: one row per country per month (sample: `sample_staffing_plan.csv`)
 
