@@ -1,9 +1,10 @@
 # Secrets
 .env
 
-# Course workbook: local only
+# Raw data: only the course workbook is tracked (repo stays private)
 data/raw/*
 !data/raw/README.md
+!data/raw/DADS5250_Hackathon_Google_Data.xlsx
 
 # Python
 __pycache__/

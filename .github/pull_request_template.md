@@ -8,4 +8,4 @@ Closes #
 - [ ] `pytest` passes
 - [ ] Any new assumption is recorded in `docs/assumptions.md`
 - [ ] AI use logged in `docs/AI_USE.md`
-- [ ] No `.env`, API keys, or raw workbook committed
+- [ ] No `.env` or API keys committed

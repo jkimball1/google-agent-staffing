@@ -41,7 +41,7 @@ pip install -r requirements.txt
 cp .env.example .env                                 # then add your API key
 ```
 
-Put the course workbook in `data/raw/` (see [`data/raw/README.md`](data/raw/README.md)). It is not committed to the repo.
+The course workbook is already in `data/raw/` (see [`data/raw/README.md`](data/raw/README.md)). The repo must stay private because of it.
 
 Check that everything is wired up:
 
@@ -54,7 +54,7 @@ pytest
 ```
 ├── INTERFACES.md            shared function signatures and data formats (read this first)
 ├── data/
-│   ├── raw/                 course workbook (local only, git-ignored)
+│   ├── raw/                 course workbook (committed; keep repo private)
 │   └── sample/              stand-in files for independent development (not results)
 ├── src/
 │   ├── schemas.py           column contracts + validate()
@@ -92,7 +92,7 @@ Video assembly: TBD · Canvas submission: TBD
 3. **Don't change a contract alone.** Changes to `INTERFACES.md` and `src/schemas.py` need the affected owners to agree.
 4. **Open a PR** when your piece works. At least one other member reviews before merging. Keep `main` runnable.
 5. **Only the Member 4 owner edits the final notebook.** Everyone else puts code in `src/` and sends notebook text and plots to them through their PR or Issue.
-6. **Never commit** `.env`, API keys, or the raw workbook.
+6. **Never commit** `.env` or API keys. **Keep the repo private**, because it contains the course data.
 7. **Log AI use** in [docs/AI_USE.md](docs/AI_USE.md) as you go.
 
 ## Timeline

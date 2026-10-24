@@ -1,11 +1,8 @@
 # Raw data
 
-Put the course workbook here, e.g. `data/raw/<workbook-name>.xlsx`, and update the filename below once it's confirmed.
+The course workbook, `DADS5250_Hackathon_Google_Data.xlsx`, is committed here, so cloning the repo gets you the data.
 
-It is **git-ignored**: we have not confirmed that the course allows sharing it in a repository.
-Every team member downloads it from Canvas and places it here locally.
-
-Workbook filename: `DADS5250_Hackathon_Google_Data.xlsx` (sign in with your Northeastern account to download it from the course hackathon page)
+The course hasn't said whether the data may be redistributed, so **keep this repo private**. At submission, add the teaching team as collaborators instead of making the repo public. Don't edit the workbook; do all cleaning in code.
 
 | Sheet | Rows | Columns |
 |---|---|---|
