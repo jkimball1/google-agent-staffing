@@ -29,7 +29,7 @@ workbook ──► forecast_demand() ──► demand_df ─┐
 
 ## Data formats
 
-All sample files in `data/sample/` are **synthetic**. Regenerate them with `python data/sample/make_samples.py`.
+Sample files in `data/sample/` are development stand-ins, **not results**. `sample_country_parameters.csv` holds the real workbook values. `sample_demand.csv` is the actual 2025 eligible sign-ups replayed as 2026, not a forecast. The plan and results samples are synthetic. Regenerate them with `python data/sample/make_samples.py`.
 
 ### `demand_df`: one row per country per day of 2026 (sample: `sample_demand.csv`)
 

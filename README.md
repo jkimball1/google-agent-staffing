@@ -55,7 +55,7 @@ pytest
 ├── INTERFACES.md            shared function signatures and data formats (read this first)
 ├── data/
 │   ├── raw/                 course workbook (local only, git-ignored)
-│   └── sample/              SYNTHETIC sample files for independent development
+│   └── sample/              stand-in files for independent development (not results)
 ├── src/
 │   ├── schemas.py           column contracts + validate()
 │   ├── forecasting/         Member 1: forecast.py
@@ -88,7 +88,7 @@ Video assembly: TBD · Canvas submission: TBD
 ## How we work
 
 1. **Work on your own branch**, mostly inside your own folder.
-2. **Build against `data/sample/`** until the upstream module is ready. The sample files are synthetic.
+2. **Build against `data/sample/`** until the upstream module is ready. They're stand-ins, not results. See `INTERFACES.md`.
 3. **Don't change a contract alone.** Changes to `INTERFACES.md` and `src/schemas.py` need the affected owners to agree.
 4. **Open a PR** when your piece works. At least one other member reviews before merging. Keep `main` runnable.
 5. **Only the Member 4 owner edits the final notebook.** Everyone else puts code in `src/` and sends notebook text and plots to them through their PR or Issue.

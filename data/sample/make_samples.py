@@ -1,10 +1,15 @@
-"""Generate the SYNTHETIC sample files in data/sample/.
+"""Generate the sample files in data/sample/ from the course workbook.
 
-These numbers are made up. They exist only so each module can be built and
-tested against the agreed interfaces before the real pipeline exists.
-Do not use them for any analysis or conclusions.
+These are development stand-ins so each module can be built against the agreed
+interfaces before the real pipeline exists. They are NOT the forecast or the plan.
 
-Run from the repo root:  python data/sample/make_samples.py
+  sample_country_parameters.csv  REAL values from the workbook (22 countries)
+  sample_demand.csv              2025 eligible sign-ups replayed as 2026 (naive, not a forecast)
+  sample_staffing_plan.csv       SYNTHETIC random hires/terminations
+  sample_results.csv             SYNTHETIC rough approximation, not a simulation
+
+Run from the repo root (needs data/raw/DADS5250_Hackathon_Google_Data.xlsx):
+    python data/sample/make_samples.py
 """
 
 from pathlib import Path
@@ -12,45 +17,57 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+ROOT = Path(__file__).resolve().parents[2]
+WORKBOOK = ROOT / "data" / "raw" / "DADS5250_Hackathon_Google_Data.xlsx"
 OUT = Path(__file__).parent
 rng = np.random.default_rng(5250)
-
-# Placeholder countries. The real list of 22 comes from the course workbook.
-COUNTRIES = {
-    # country: (daily eligible sign-ups, mean budget, salary, threshold, starting agents)
-    "Germany": (18.0, 42_000, 68_000, 25_000, 30),
-    "Japan":   (14.0, 51_000, 61_000, 30_000, 22),
-    "Brazil":  (22.0, 19_000, 24_000, 10_000, 35),
-    "India":   (30.0, 12_000, 14_000,  6_000, 48),
-}
 MONTHS = [f"2026-{m:02d}" for m in range(1, 13)]
 
 
-def make_country_parameters():
-    rows = [
-        {"country": c, "annual_salary_usd": sal, "eligibility_threshold_usd": thr,
-         "agents_jan_2026": agents}
-        for c, (_, _, sal, thr, agents) in COUNTRIES.items()
-    ]
-    return pd.DataFrame(rows)
+def make_country_parameters(sheets):
+    sal = sheets["Agent Salary and Threshold"]
+    staff = sheets["Existing Agent Staffing"]
+    return sal.merge(staff, on="Country").rename(columns={
+        "Country": "country",
+        "Annual_Agent_Salary_USD": "annual_salary_usd",
+        "Advertiser_Eligibility_Threshold_USD": "eligibility_threshold_usd",
+        "Existing_Agent_Count": "agents_jan_2026",
+    })
 
 
-def make_demand():
-    dates = pd.date_range("2026-01-01", "2026-12-31", freq="D")
+def make_demand(sheets, params):
+    s = sheets["Advertiser Sign-ups"].copy()
+    # 2025-02-29 is read as text. Provisional D1: spread those rows evenly over Feb 2025.
+    bad = s["Sign_Up_Date"].map(lambda v: isinstance(v, str))
+    feb_days = pd.date_range("2025-02-01", "2025-02-28", freq="D")
+    s.loc[bad, "Sign_Up_Date"] = [feb_days[i % len(feb_days)] for i in range(bad.sum())]
+    s["date"] = pd.to_datetime(s["Sign_Up_Date"])
+
+    s = s.merge(params, left_on="Country", right_on="country")
+    s = s[(s["date"].dt.year == 2025)
+          & (s["Projected_Annual_Budget"] > s["eligibility_threshold_usd"])]
+    s["date"] = s["date"] + pd.DateOffset(years=1)
+
+    daily = (s.groupby(["country", "date"])
+             .agg(eligible_signups=("Advertiser_ID", "size"),
+                  mean_annual_budget_usd=("Projected_Annual_Budget", "mean"))
+             .reset_index())
+
+    # Fill days with no sign-ups so every country has all 365 days.
+    full = pd.MultiIndex.from_product(
+        [params["country"], pd.date_range("2026-01-01", "2026-12-31", freq="D")],
+        names=["country", "date"])
+    daily = daily.set_index(["country", "date"]).reindex(full).reset_index()
+    daily["eligible_signups"] = daily["eligible_signups"].fillna(0).astype(float)
+    country_mean = daily.groupby("country")["mean_annual_budget_usd"].transform("mean")
+    daily["mean_annual_budget_usd"] = daily["mean_annual_budget_usd"].fillna(country_mean).round(2)
+    daily["date"] = daily["date"].dt.strftime("%Y-%m-%d")
+    return daily
+
+
+def make_staffing_plan(params):
     rows = []
-    for c, (daily, budget, *_) in COUNTRIES.items():
-        season = 1 + 0.15 * np.sin(2 * np.pi * (dates.dayofyear - 60) / 365)
-        signups = rng.poisson(daily * season)
-        for d, s in zip(dates, signups):
-            rows.append({"country": c, "date": d.strftime("%Y-%m-%d"),
-                         "eligible_signups": float(s),
-                         "mean_annual_budget_usd": round(budget * rng.uniform(0.9, 1.1), 2)})
-    return pd.DataFrame(rows)
-
-
-def make_staffing_plan():
-    rows = []
-    for c in COUNTRIES:
+    for c in params["country"]:
         for m in MONTHS:
             rows.append({"country": c, "month": m,
                          "hires_requested": int(rng.integers(0, 4)),
@@ -76,7 +93,7 @@ def make_results(demand, params, plan):
             supported = min(r.forecast_eligible, capacity_new)
             waiting = max(r.forecast_eligible - supported, 0) * 0.6
             expired = max(r.forecast_eligible - supported, 0) * 0.4
-            revenue = supported * r.budget * 0.135 * 60 / 365
+            revenue = supported * r.budget * 0.135
             salary = (active + r.hires_requested) * r.annual_salary_usd / 12
             term_cost = r.terminations_requested * 0.4 * r.annual_salary_usd
             rows.append({
@@ -89,7 +106,7 @@ def make_results(demand, params, plan):
                 "advertisers_supported": round(supported, 1),
                 "advertisers_waiting": round(waiting, 1),
                 "advertisers_expired": round(expired, 1),
-                "average_wait_days": round(float(rng.uniform(2, 25)), 1),
+                "average_wait_days": round(float(rng.uniform(0, 5)), 1),
                 "utilization": round(min(supported / max(capacity_new, 1), 1.0), 3),
                 "incremental_revenue_usd": round(revenue, 2),
                 "salary_cost_usd": round(salary, 2),
@@ -102,9 +119,10 @@ def make_results(demand, params, plan):
 
 
 if __name__ == "__main__":
-    params = make_country_parameters()
-    demand = make_demand()
-    plan = make_staffing_plan()
+    sheets = pd.read_excel(WORKBOOK, sheet_name=None)
+    params = make_country_parameters(sheets)
+    demand = make_demand(sheets, params)
+    plan = make_staffing_plan(params)
     results = make_results(demand, params, plan)
 
     params.to_csv(OUT / "sample_country_parameters.csv", index=False)
