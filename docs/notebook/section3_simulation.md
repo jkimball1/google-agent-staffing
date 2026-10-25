@@ -102,3 +102,33 @@ plus a check that a full 22-country run produces output in the agreed format.
 ```python
 !cd "{ROOT}" && python -m pytest -q tests/test_simulation.py
 ```
+
+---
+---
+
+# Text for other parts of the submission
+
+## For the README (component description)
+
+> **Staffing simulation (Mer McFadden).** `src/simulation/simulator.py` plays out a staffing plan day by day for each country, then summarizes it by month. It applies the challenge's rules: 10 advertisers per agent, 60-day support, a 60-day waiting limit, one month of training, and one month's notice with a 40% termination cost. For each country and month it reports headcount, advertisers supported, waiting and expired, utilization, revenue uplift, and costs. The optimizer, the sensitivity analysis and the planning assistant all use it to evaluate staffing plans. See `src/simulation/README.md` for how to call it, and `tests/test_simulation.py` for hand-checkable test cases.
+
+## For notebook section 7 (limitations and other considerations)
+
+> **Simulator limitations**
+> - **Monthly decisions.** The challenge allows hiring and firing at any point in a month. We only make changes on the 1st, which is simpler but may leave some savings on the table.
+> - **Agents as a shared pool.** Within each country we track total capacity, not individual agent–advertiser pairs. Real reassignment when an agent leaves would be messier than "anyone with a free slot takes over."
+> - **Demand is treated as known.** Each run uses one demand forecast. Uncertainty is handled by re-running at ±20% (section 5), not by modeling day-to-day randomness.
+> - **Expected uplift, not the distribution.** Each supported advertiser is worth the expected 13.5% uplift. Individual outcomes range from 0% to 25%.
+> - **End-of-year horizon.** Revenue is booked when support starts, so December assignments count fully even though support continues into 2027, while 2027 salaries aren't counted. Advertisers still waiting on December 31 are left unresolved. Staffing decisions late in the year should be read with this in mind.
+> - **No cross-country help.** Agents can't cover other countries, even where language would allow it.
+> - **Identical agents.** Every agent has the same capacity from their first productive day. No attrition, ramp-up curve or absences.
+
+## For notebook section 8 (contributions)
+
+> **Mer McFadden:** set up the repository, shared interfaces and modeling assumptions; built and tested the staffing simulator (`src/simulation/`); wrote notebook section 3.
+
+## For the video (about 25 seconds)
+
+> "Under every number in our plan is a day-by-day simulator. Each day, new eligible advertisers arrive, get an agent if one has a free slot, or wait for up to 60 days. Agents hold 10 advertisers for 60 days each, new hires train for a month, and terminations take a month's notice and cost 40% of salary. Here's a small example: one termination timed a month too early cuts off support for 10 advertisers and wipes out their uplift. The optimizer uses this simulator to test thousands of plans, and the assistant calls it to answer what-if questions."
+
+*(Suggested visual: the worked-example table from section 3.)*
