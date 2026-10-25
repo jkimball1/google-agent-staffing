@@ -22,8 +22,7 @@ workbook ──► forecast_demand() ──► demand_df ─┐
 |---|---|---|
 | Member 1 | `src.forecasting.forecast.forecast_demand(workbook_path)` | `demand_df` |
 | Member 1 | `src.forecasting.forecast.load_country_parameters(workbook_path)` | `country_parameters_df` |
-| Member 2 | `src.simulation.simulator.simulate_plan(demand_df, staffing_plan_df, country_parameters_df, uplift_basis="annual")` | `results_df` |
-| Member 2 | `src.simulation.simulator.simulate_country(daily_arrivals, daily_budget, agents_start, hires, terminations, annual_salary, uplift_basis="annual")` | 12 monthly rows for one country (faster for optimizers) |
+| Member 2 | `src.simulation.simulator.simulate_plan(demand_df, staffing_plan_df, country_parameters_df)` | `results_df` |
 | Member 3 | `src.optimization.optimizer.optimize_staffing(demand_df, country_parameters_df, simulate_fn)` | `(recommended_plan_df, results_df)` |
 | Member 3 | `src.optimization.scenarios.run_scenario(demand_multiplier=1.0, country=None)` | `results_df` |
 | Member 4 | `src.genai.assistant.answer_question(question, planning_model)` | `StaffingMemo` (Pydantic) |
@@ -67,7 +66,7 @@ The final plan is this table for all 22 countries × 12 months = **264 rows**, s
 |---|---|
 | `country`, `month` | Keys |
 | `forecast_eligible` | Eligible arrivals that month |
-| `agents_active` | Productive agents, including any serving notice (excludes trainees) |
+| `agents_active` | Productive agents (excludes trainees) |
 | `agents_in_training` | Agents in their training month |
 | `agents_hired` | Hires decided this month |
 | `agents_terminated` | Terminations decided this month |
@@ -76,9 +75,8 @@ The final plan is this table for all 22 countries × 12 months = **264 rows**, s
 | `advertisers_expired` | Waited more than 60 days and were lost |
 | `average_wait_days` | Mean wait for advertisers assigned this month |
 | `utilization` | Occupied slots ÷ (agents_active × 10) |
-| `incremental_revenue_usd` | Uplift revenue, booked in the month support starts. Can be negative in a month when support is cut short (D5) |
+| `incremental_revenue_usd` | Estimated uplift revenue |
 | `salary_cost_usd` | Salary paid this month (incl. trainees and agents serving notice) |
 | `termination_cost_usd` | 40% of annual salary per termination |
 | `total_cost_usd` | Salary + termination |
-| `net_value_usd` | Revenue − total cost (can be negative) |
-| `advertisers_support_lost` | *Extra column from the simulator:* advertisers whose support was cut short because their agent left with no free slot to take them (D5). The uplift for the days they miss is removed that month. |
+| `net_value_usd` | Revenue − total cost |

@@ -39,7 +39,7 @@ RESULTS_COLUMNS = [
     "country",
     "month",
     "forecast_eligible",        # eligible arrivals that month
-    "agents_active",            # productive agents incl. any serving notice (excludes trainees)
+    "agents_active",            # productive agents (excludes trainees)
     "agents_in_training",
     "agents_hired",
     "agents_terminated",
