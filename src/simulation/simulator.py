@@ -12,20 +12,24 @@ Simulates day by day, summarizes by month. Rules (see docs/assumptions.md D3, D5
   - terminations need one month of notice; cost 40% of annual salary
 
 Each country's agents are modeled as one shared pool. Agents serving notice keep
-their current advertisers but take no new ones, so new assignments are limited to
-what the agents who are staying can hold: free slots = 10 x staying agents - occupied.
+their current advertisers but take no new ones, and new assignments are limited to
+what the agents who are staying can hold: free slots = 10 x staying agents - all
+occupied slots. So while someone is on notice, the pool keeps room to absorb their
+advertisers when they leave.
 """
 
 import numpy as np
 import pandas as pd
 
 from src.optimization.financials import incremental_revenue, termination_cost
-from src.schemas import RESULTS_COLUMNS
+from src.schemas import (
+    COUNTRY_PARAMETERS_COLUMNS, DEMAND_COLUMNS, RESULTS_COLUMNS, STAFFING_PLAN_COLUMNS, validate,
+)
 
 AGENT_CAPACITY = 10
 SUPPORT_DAYS = 60
 MAX_WAIT_DAYS = 60
-TERMINATION_COST_RATE = 0.40
+EPS = 1e-9  # ignore floating-point crumbs when comparing slot counts
 
 DATES = pd.date_range("2026-01-01", "2026-12-31", freq="D")
 MONTHS = [f"2026-{m:02d}" for m in range(1, 13)]
@@ -94,10 +98,13 @@ def simulate_country(
             on_notice = leaving
 
             holding = AGENT_CAPACITY * (productive + on_notice)
-            if occupied_total > holding:
+            if occupied_total > holding + EPS:
                 keep = holding / occupied_total
+                # Lost advertisers forfeit uplift for the support days they miss (D5).
+                days_left = np.clip(np.arange(n_days) + SUPPORT_DAYS - t, 0, SUPPORT_DAYS)
                 m["advertisers_support_lost"][mo] += occupied_total - holding
-                m["incremental_revenue_usd"][mo] -= occupied_value.sum() * (1 - keep)
+                m["incremental_revenue_usd"][mo] -= (
+                    occupied_value * (1 - keep) * days_left / SUPPORT_DAYS).sum()
                 occupied *= keep
                 occupied_value *= keep
                 occupied_total = float(holding)
@@ -121,7 +128,7 @@ def simulate_country(
 
         # 5. Serve the line first-come, first-served
         free = AGENT_CAPACITY * productive - occupied_total
-        if free > 0:
+        if free > EPS:
             lo = max(0, t - MAX_WAIT_DAYS)
             line = waiting[lo:t + 1]
             ahead = np.cumsum(line) - line
@@ -175,12 +182,13 @@ def simulate_plan(
     """Run a staffing plan against demand.
 
     Inputs follow DEMAND_COLUMNS, STAFFING_PLAN_COLUMNS, COUNTRY_PARAMETERS_COLUMNS.
-    Days missing from demand_df count as zero sign-ups; months missing from the plan
-    count as no hires or terminations.
-    Returns one row per country-month with RESULTS_COLUMNS plus EXTRA_COLUMNS.
+    Demand must already be eligibility-filtered (Role 1). Days missing from demand_df
+    count as zero sign-ups; countries or months missing from the plan count as no
+    hires or terminations. Inputs that don't line up raise one ValueError listing
+    every problem. Returns one row per country-month with RESULTS_COLUMNS plus EXTRA_COLUMNS.
     """
+    _check_inputs(demand_df, staffing_plan_df, country_parameters_df)
     demand = demand_df.assign(day=(pd.to_datetime(demand_df["date"]) - DATES[0]).dt.days)
-    demand = demand[(demand["day"] >= 0) & (demand["day"] < len(DATES))]
     plan = staffing_plan_df.set_index(["country", "month"])
 
     frames = []
@@ -188,8 +196,11 @@ def simulate_plan(
         d = demand[demand["country"] == p.country]
         arrivals = np.zeros(len(DATES))
         np.add.at(arrivals, d["day"].to_numpy(), d["eligible_signups"].to_numpy())
-        budget = np.full(len(DATES), d["mean_annual_budget_usd"].mean() if len(d) else 0.0)
-        budget[d["day"].to_numpy()] = d["mean_annual_budget_usd"].to_numpy()
+        country_mean = d["mean_annual_budget_usd"].mean()
+        country_mean = 0.0 if pd.isna(country_mean) else country_mean
+        budget = np.full(len(DATES), country_mean)
+        # A missing budget only matters on days with sign-ups, and _check_inputs rejects those.
+        budget[d["day"].to_numpy()] = d["mean_annual_budget_usd"].fillna(country_mean).to_numpy()
 
         def plan_column(col):
             return [int(plan[col].get((p.country, mo), 0)) for mo in MONTHS]
@@ -202,3 +213,59 @@ def simulate_plan(
 
     out = pd.concat(frames, ignore_index=True)
     return out[RESULTS_COLUMNS + EXTRA_COLUMNS]
+
+
+def _check_inputs(demand_df, staffing_plan_df, country_parameters_df):
+    """Raise one ValueError listing every way the three inputs fail to line up."""
+    validate(demand_df, DEMAND_COLUMNS, "demand_df")
+    validate(staffing_plan_df, STAFFING_PLAN_COLUMNS, "staffing_plan_df")
+    validate(country_parameters_df, COUNTRY_PARAMETERS_COLUMNS, "country_parameters_df")
+    problems = []
+    params, demand, plan = country_parameters_df, demand_df, staffing_plan_df
+    known = set(params["country"])
+
+    if params["country"].duplicated().any():
+        problems.append("country_parameters has duplicate countries: "
+                        f"{sorted(params.loc[params['country'].duplicated(), 'country'])}")
+    for col in ["annual_salary_usd", "agents_jan_2026"]:
+        bad = params[col].isna() | (params[col] < 0)
+        if bad.any():
+            problems.append(f"country_parameters has missing or negative {col} for "
+                            f"{sorted(params.loc[bad, 'country'])}")
+
+    unknown = set(demand["country"]) - known
+    if unknown:
+        problems.append(f"demand has countries not in country_parameters: {sorted(unknown)}")
+    missing = known - set(demand["country"])
+    if missing:
+        problems.append(f"countries with no demand rows: {sorted(missing)}")
+    dates = pd.to_datetime(demand["date"], format="%Y-%m-%d", errors="coerce")
+    if dates.isna().any():
+        problems.append("demand has dates not in YYYY-MM-DD form, e.g. "
+                        f"{demand.loc[dates.isna(), 'date'].iloc[0]!r}")
+    elif (dates.dt.year != 2026).any():
+        problems.append("demand has dates outside 2026, e.g. "
+                        f"{demand.loc[dates.dt.year != 2026, 'date'].iloc[0]!r}")
+    if demand.duplicated(["country", "date"]).any():
+        problems.append("demand has duplicate (country, date) rows")
+    signups = demand["eligible_signups"]
+    if signups.isna().any() or (signups < 0).any():
+        problems.append("demand has missing or negative eligible_signups")
+    if (demand["mean_annual_budget_usd"].isna() & (signups > 0)).any():
+        problems.append("demand has missing mean_annual_budget_usd on days with sign-ups")
+
+    unknown = set(plan["country"]) - known
+    if unknown:
+        problems.append(f"plan has countries not in country_parameters: {sorted(unknown)}")
+    bad_months = sorted(set(plan["month"].astype(str)) - set(MONTHS))
+    if bad_months:
+        problems.append(f"plan has month values other than 2026-01..2026-12: {bad_months[:5]}")
+    if plan.duplicated(["country", "month"]).any():
+        problems.append("plan has duplicate (country, month) rows")
+    for col in ["hires_requested", "terminations_requested"]:
+        x = pd.to_numeric(plan[col], errors="coerce")
+        if (x.isna() | (x < 0) | (x % 1 != 0)).any():
+            problems.append(f"plan {col} must be a whole number >= 0")
+
+    if problems:
+        raise ValueError("Simulator inputs don't line up:\n  - " + "\n  - ".join(problems))

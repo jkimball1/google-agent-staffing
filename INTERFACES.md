@@ -67,7 +67,7 @@ The final plan is this table for all 22 countries × 12 months = **264 rows**, s
 |---|---|
 | `country`, `month` | Keys |
 | `forecast_eligible` | Eligible arrivals that month |
-| `agents_active` | Productive agents (excludes trainees) |
+| `agents_active` | Productive agents, including any serving notice (excludes trainees) |
 | `agents_in_training` | Agents in their training month |
 | `agents_hired` | Hires decided this month |
 | `agents_terminated` | Terminations decided this month |
@@ -76,9 +76,9 @@ The final plan is this table for all 22 countries × 12 months = **264 rows**, s
 | `advertisers_expired` | Waited more than 60 days and were lost |
 | `average_wait_days` | Mean wait for advertisers assigned this month |
 | `utilization` | Occupied slots ÷ (agents_active × 10) |
-| `incremental_revenue_usd` | Estimated uplift revenue |
+| `incremental_revenue_usd` | Uplift revenue, booked in the month support starts. Can be negative in a month when support is cut short (D5) |
 | `salary_cost_usd` | Salary paid this month (incl. trainees and agents serving notice) |
 | `termination_cost_usd` | 40% of annual salary per termination |
 | `total_cost_usd` | Salary + termination |
-| `net_value_usd` | Revenue − total cost |
-| `advertisers_support_lost` | *Extra column from the simulator:* advertisers whose support was cut short because their agent left with no free slot to take them (D5). Their revenue is removed that month. |
+| `net_value_usd` | Revenue − total cost (can be negative) |
+| `advertisers_support_lost` | *Extra column from the simulator:* advertisers whose support was cut short because their agent left with no free slot to take them (D5). The uplift for the days they miss is removed that month. |
