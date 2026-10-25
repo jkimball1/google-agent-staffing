@@ -100,5 +100,5 @@ plus a check that a full 22-country run produces output in the agreed format.
 **[code cell]**
 
 ```python
-!python -m pytest -q tests/test_simulation.py
+!cd "{ROOT}" && python -m pytest -q tests/test_simulation.py
 ```
