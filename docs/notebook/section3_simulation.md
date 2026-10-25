@@ -119,7 +119,7 @@ plus a check that a full 22-country run produces output in the agreed format.
 > - **Agents as a shared pool.** Within each country we track total capacity, not individual agent–advertiser pairs. Real reassignment when an agent leaves would be messier than "anyone with a free slot takes over."
 > - **Demand is treated as known.** Each run uses one demand forecast. Uncertainty is handled by re-running at ±20% (section 5), not by modeling day-to-day randomness.
 > - **Expected uplift, not the distribution.** Each supported advertiser is worth the expected 13.5% uplift. Individual outcomes range from 0% to 25%.
-> - **End-of-year horizon.** Revenue is booked when support starts, so December assignments count fully even though support continues into 2027, while 2027 salaries aren't counted. Advertisers still waiting on December 31 are left unresolved. Staffing decisions late in the year should be read with this in mind.
+> - **End-of-year horizon.** Only 2026 costs and revenue are counted. A termination late in the year pays the full 40% cost but saves only a month or two of 2026 salary, so cuts in Q4 look unattractive even if those agents would sit idle into 2027. December's headcount isn't checked against what early 2027 will need, and advertisers still waiting on December 31 are left unresolved.
 > - **No cross-country help.** Agents can't cover other countries, even where language would allow it.
 > - **Identical agents.** Every agent has the same capacity from their first productive day. No attrition, ramp-up curve or absences.
 

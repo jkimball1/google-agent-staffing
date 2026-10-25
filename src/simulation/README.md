@@ -48,6 +48,7 @@ Countries don't interact (D6), so a plan's total value is the sum of each countr
 | Fractional sign-ups | Allowed. Advertiser counts are decimals; agent counts are whole numbers. |
 | Revenue timing | Uplift is booked in the month support starts, even if support runs into 2027. |
 | Waiting on Dec 31 | Reported in December's `advertisers_waiting`. Not counted as expired. |
+| Year-end horizon | Only 2026 salary and revenue are counted. A termination's savings stop on Dec 31, so late-year cuts look worse than they would over a 12-month view, and plans tend to end the year with extra agents. How to handle this is an objective choice (D8) for the optimizer, e.g. note it as a limitation or credit savings beyond December. |
 
 ## Tests
 
