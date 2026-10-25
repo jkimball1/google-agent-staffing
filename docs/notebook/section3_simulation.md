@@ -1,6 +1,6 @@
 # Notebook section 3: Staffing simulation (draft for integration)
 
-Author: Mer McFadden (Role 2). For Enrique to paste into `notebooks/final_submission.ipynb`.
+Author: Mer McFadden (Role 2). For whoever assembles `notebooks/final_submission.ipynb` to paste in.
 Each block below is marked **[markdown cell]** or **[code cell]**. The code cells assume the
 notebook's setup cell has already put the repo root on `sys.path`.
 
