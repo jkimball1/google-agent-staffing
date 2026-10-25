@@ -129,6 +129,6 @@ plus a check that a full 22-country run produces output in the agreed format.
 
 ## For the video (about 25 seconds)
 
-> "Under every number in our plan is a day-by-day simulator. Each day, new eligible advertisers arrive, get an agent if one has a free slot, or wait for up to 60 days. Agents hold 10 advertisers for 60 days each, new hires train for a month, and terminations take a month's notice and cost 40% of salary. Here's a small example: one termination timed a month too early cuts off support for 10 advertisers and wipes out their uplift. The optimizer uses this simulator to test thousands of plans, and the assistant calls it to answer what-if questions."
+> "Under every number in our plan is a day-by-day simulator. Each day, new eligible advertisers arrive, get an agent if one has a free slot, or wait for up to 60 days. Agents hold 10 advertisers for 60 days each, new hires train for a month, and terminations take a month's notice and cost 40% of salary. Here's a small example: one termination timed a month too early cuts off support for 10 advertisers and wipes out their uplift. The optimizer uses this simulator to test staffing plans, and the assistant calls it to answer what-if questions."
 
 *(Suggested visual: the worked-example table from section 3.)*
