@@ -42,16 +42,17 @@ Countries don't interact (D6), so a plan's total value is the sum of each countr
 
 | Situation | What happens |
 |---|---|
-| Terminations exceed the productive agents employed that month | `ValueError`. The optimizer should never propose this. |
-| Inputs don't line up | `simulate_plan` raises a `ValueError` for: demand/plan countries not in `country_parameters`, countries with no demand rows, dates not `YYYY-MM-DD` or outside 2026, duplicate (country, date) or (country, month) rows, missing or negative sign-ups, missing budgets on days with sign-ups, plan months other than `2026-01`..`2026-12`, hires/terminations that aren't whole numbers ≥ 0, and missing or negative salary/headcount. `simulate_country` skips these checks for speed. |
+| Terminations exceed the productive agents employed that month | `ValueError`. Trainees can't be terminated. The optimizer should never propose this. |
+| Tables don't line up | `simulate_plan` raises one `ValueError` listing every problem: demand/plan countries not in `country_parameters`, countries with no demand rows, dates not `YYYY-MM-DD` or outside 2026, duplicate (country, date) or (country, month) rows, and plan months other than `2026-01`..`2026-12`. |
+| Invalid values | `simulate_country` raises a `ValueError` (from `simulate_plan`, prefixed with the country) unless: arrivals and budgets are 365 finite values ≥ 0, hires and terminations are 12 whole numbers ≥ 0, `agents_start` is a whole number ≥ 0, salary is finite and ≥ 0, and `uplift_basis` is `"annual"` or `"support_window"`. `simulate_plan` fills missing budgets on days with no sign-ups first, so those are allowed. These checks always run, including for direct calls from an optimizer. |
 | Terminating agents who still have advertisers (D5) | The remaining agents take them over if they have free slots. Otherwise those advertisers show up in `advertisers_support_lost`, and the uplift for the support days they miss is subtracted from `incremental_revenue_usd` that month. |
 | Hires | Paid from the month they're hired, productive from the next month. A December hire costs salary and never helps in 2026. |
 | Agents serving notice | Paid and counted in `agents_active` for the notice month, but take no new advertisers. Staying agents only take new advertisers if they could hold everyone currently assigned, so the pool keeps room for the departing agents' advertisers. |
 | Fractional sign-ups | Allowed. Advertiser counts are decimals; agent counts are whole numbers. |
 | Revenue timing | Uplift is booked in the month support starts, even if support runs into 2027. Monthly revenue and net value can be negative. |
 | Waiting on Dec 31 | Reported in December's `advertisers_waiting`. Not counted as expired. |
-| Year-end horizon | Only 2026 salary and revenue are counted. A termination's savings stop on Dec 31, so late-year cuts look worse than they would over a 12-month view, and plans tend to end the year with extra agents. How to handle this is an objective choice (D8) for the optimizer, e.g. note it as a limitation or credit savings beyond December. |
+| Year-end horizon | Only 2026 salary and revenue are counted. A termination's savings stop on Dec 31, so late-year cuts look worse than they would over a 12-month view, and plans tend to end the year with extra agents. How to handle this is an objective choice (D8) for the optimizer, e.g. note it as a limitation or credit savings beyond December. December terminations still pay D5's cost: those agents leave Jan 1, 2027, and any advertisers they strand are booked as lost in December. |
 
 ## Tests
 
-`python -m pytest -q tests/test_simulation.py` runs 32 tests: 17 small cases you can check by hand, 4 full-sample runs (results format, every sign-up accounted for, a tightly staffed run that forces waiting, expiries and lost support, and missing budgets on zero-sign-up days), and 11 bad inputs that must raise.
+`python -m pytest -q tests/test_simulation.py` runs 55 tests: 26 small cases you can check by hand, 11 invalid values `simulate_country` must reject, 13 mismatched or invalid tables `simulate_plan` must reject, and 5 full-sample runs (results format, every sign-up accounted for, a tightly staffed run that forces waiting, expiries and lost support, missing budgets on zero-sign-up days, and errors naming the country).

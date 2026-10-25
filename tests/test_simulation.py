@@ -66,6 +66,15 @@ def test_unserved_advertisers_expire_after_sixty_days():
     assert r.loc["2026-03", "advertisers_waiting"] == 0
 
 
+@pytest.mark.parametrize("arrival_day, expiry_month", [
+    (28, "2026-03"),  # Jan 29 + 61 days = Mar 31 (day 89)
+    (29, "2026-04"),  # Jan 30 + 61 days = Apr 1 (day 90)
+])
+def test_expiry_happens_exactly_61_days_after_arrival(arrival_day, expiry_month):
+    r = run({arrival_day: 5}, agents=0)
+    assert r.loc[expiry_month, "advertisers_expired"] == 5
+
+
 def test_hire_is_paid_while_training_and_productive_next_month():
     r = run({0: 5}, agents=0, hires={1: 1})
     assert r.loc["2026-01", "advertisers_supported"] == 0
@@ -146,6 +155,77 @@ def test_still_waiting_on_december_31_is_not_expired():
     assert r["advertisers_expired"].sum() == 0
 
 
+def test_lost_uplift_is_prorated_by_each_advertisers_days_left():
+    # 10 start day 0 and 10 start day 20; one of 2 agents leaves Mar 1 (day 59), so half
+    # of each group is lost, with 1 and 21 support days left respectively.
+    r = run({0: 10, 20: 10}, agents=2, terms={2: 1})
+    assert r.loc["2026-03", "advertisers_support_lost"] == 10
+    assert r.loc["2026-03", "incremental_revenue_usd"] == pytest.approx(
+        -(5 * UPLIFT_EACH * 1 / 60 + 5 * UPLIFT_EACH * 21 / 60))
+
+
+def test_december_termination_strands_advertisers_at_year_end():
+    # 20 start Nov 15 (day 318); one of 2 agents leaves Jan 1, 2027 with 13 days of
+    # their support left. The loss is booked in December.
+    r = run({318: 20}, agents=2, terms={12: 1})
+    assert r.loc["2026-12", "advertisers_support_lost"] == 10
+    assert r.loc["2026-12", "incremental_revenue_usd"] == pytest.approx(-10 * UPLIFT_EACH * 13 / 60)
+
+
+def test_december_hire_absorbs_a_december_departure():
+    r = run({318: 20}, agents=2, hires={12: 1}, terms={12: 1})
+    assert r["advertisers_support_lost"].sum() == 0
+
+
+def test_december_hire_is_paid_but_never_productive_in_2026():
+    r = run({340: 5}, agents=0, hires={12: 1})
+    assert r.loc["2026-12", "advertisers_supported"] == 0
+    assert r.loc["2026-12", "salary_cost_usd"] == pytest.approx(1_000)
+
+
+def test_utilization_counts_agents_serving_notice_in_capacity():
+    r = run({0: 10}, agents=2, terms={1: 1})
+    assert r.loc["2026-01", "utilization"] == pytest.approx(0.5)
+
+
+def test_hire_and_terminate_in_the_same_month():
+    r = run({}, agents=2, hires={1: 1}, terms={1: 1})
+    assert r.loc["2026-01", "agents_active"] == 2      # 1 staying + 1 on notice
+    assert r.loc["2026-01", "agents_in_training"] == 1
+    assert r.loc["2026-01", "salary_cost_usd"] == pytest.approx(3_000)
+    assert r.loc["2026-02", "agents_active"] == 2      # 1 staying + 1 former trainee
+
+
+def test_trainees_cannot_be_terminated():
+    with pytest.raises(ValueError, match="productive"):
+        run({}, agents=0, hires={1: 1}, terms={1: 1})
+
+
+def _country_args(**overrides):
+    args = dict(daily_arrivals=np.zeros(365), daily_budget=np.full(365, 1e4), agents_start=1,
+                hires=[0] * 12, terminations=[0] * 12, annual_salary=SALARY)
+    args.update(overrides)
+    return args
+
+
+@pytest.mark.parametrize("overrides, message", [
+    (dict(daily_arrivals=np.zeros(364)), "365"),
+    (dict(daily_arrivals=np.r_[np.inf, np.zeros(364)]), "daily_arrivals"),
+    (dict(daily_arrivals=np.r_[-1.0, np.zeros(364)]), "daily_arrivals"),
+    (dict(daily_budget=np.r_[np.nan, np.full(364, 1e4)]), "daily_budget"),
+    (dict(daily_budget=np.full(365, -1e4)), "daily_budget"),
+    (dict(hires=[0.5] + [0] * 11), "hires"),
+    (dict(terminations=[0] * 11), "terminations"),
+    (dict(agents_start=652.9), "agents_start"),
+    (dict(agents_start=-1), "agents_start"),
+    (dict(annual_salary=np.nan), "annual_salary"),
+    (dict(uplift_basis="anual"), "uplift_basis"),
+])
+def test_simulate_country_rejects_invalid_values(overrides, message):
+    with pytest.raises(ValueError, match=message):
+        simulate_country(**_country_args(**overrides))
+
+
 # ---- Full runs on the shared sample files (the hand-offs from Roles 1 and 3) ----
 
 SAMPLE = Path(__file__).resolve().parents[1] / "data" / "sample"
@@ -204,13 +284,15 @@ def _break(table, change):
     ("demand", lambda d: d[d["country"] != "Spain"], "no demand rows"),
     ("demand", lambda d: pd.concat([d, d.head(1)]), "duplicate"),
     ("demand", lambda d: d.assign(date=d["date"].str.replace("2026", "2025")), "2026"),
-    ("demand", lambda d: d.assign(eligible_signups=-d["eligible_signups"] - 1), "eligible_signups"),
-    ("demand", lambda d: d.assign(mean_annual_budget_usd=np.nan), "mean_annual_budget_usd"),
+    ("demand", lambda d: d.assign(eligible_signups=-d["eligible_signups"] - 1), "daily_arrivals"),
+    ("demand", lambda d: d.assign(mean_annual_budget_usd=np.nan), "daily_budget"),
+    ("demand", lambda d: d.assign(mean_annual_budget_usd=-d["mean_annual_budget_usd"]), "daily_budget"),
     ("plan", lambda p: p.replace({"month": {"2026-01": "2026-1"}}), "month"),
     ("plan", lambda p: pd.concat([p, p.head(1)]), "duplicate"),
     ("plan", lambda p: p.assign(hires_requested=p["hires_requested"] + 0.5), "whole number"),
     ("plan", lambda p: p.replace({"country": {"UK": "United Kingdom"}}), "not in country_parameters"),
-    ("params", lambda c: c.assign(annual_salary_usd=np.nan), "annual_salary_usd"),
+    ("params", lambda c: c.assign(annual_salary_usd=np.nan), "annual_salary"),
+    ("params", lambda c: c.assign(agents_jan_2026=c["agents_jan_2026"] + 0.9), "agents_start"),
 ])
 def test_mismatched_inputs_raise_instead_of_running_silently(table, change, message):
     with pytest.raises(ValueError, match=message):
@@ -223,3 +305,11 @@ def test_missing_budget_on_a_day_with_no_signups_is_allowed():
     demand.loc[0, ["eligible_signups", "mean_annual_budget_usd"]] = [0, np.nan]
     out = simulate_plan(demand, plan, params)
     assert out["incremental_revenue_usd"].notna().all()
+
+
+def test_value_errors_from_simulate_plan_name_the_country():
+    demand, plan, params = load_samples()
+    params = params.astype({"agents_jan_2026": float})
+    params.loc[params["country"] == "USA", "agents_jan_2026"] = 652.9
+    with pytest.raises(ValueError, match="USA"):
+        simulate_plan(demand, plan, params)

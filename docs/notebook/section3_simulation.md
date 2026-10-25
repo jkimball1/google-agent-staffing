@@ -100,7 +100,8 @@ the optimizer weighs in section 4.
 The rules above are covered by small automated tests whose answers can be worked out by hand.
 Full 22-country runs check the agreed output format and that every eligible sign-up ends up
 supported, expired or still waiting. Malformed inputs (mismatched country names, wrong dates,
-duplicate rows, fractional hires) must raise a clear error instead of producing a misleading plan.
+duplicate rows, fractional hires or headcounts, negative or missing values) must raise a clear
+error instead of producing a misleading plan.
 
 ---
 
