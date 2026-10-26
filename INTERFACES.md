@@ -24,8 +24,13 @@ workbook ──► forecast_demand() ──► demand_df ─┐
 | Member 1 | `src.forecasting.forecast.load_country_parameters(workbook_path)` | `country_parameters_df` |
 | Member 2 | `src.simulation.simulator.simulate_plan(demand_df, staffing_plan_df, country_parameters_df, uplift_basis="annual")` | `results_df` |
 | Member 2 | `src.simulation.simulator.simulate_country(daily_arrivals, daily_budget, agents_start, hires, terminations, annual_salary, uplift_basis="annual")` | 12 monthly rows for one country (faster for optimizers) |
-| Member 3 | `src.optimization.optimizer.optimize_staffing(demand_df, country_parameters_df, simulate_fn)` | `(recommended_plan_df, results_df)` |
-| Member 3 | `src.optimization.scenarios.run_scenario(demand_multiplier=1.0, country=None)` | `results_df` |
+| Member 2 | `src.simulation.simulator.daily_inputs(demand_df, country)` | `(daily_arrivals, daily_budget)` arrays for `simulate_country` |
+| Member 3 | `src.optimization.optimizer.optimize_staffing(demand_df, country_parameters_df, simulate_fn=simulate_plan, uplift_basis="annual", year_end_floor=False)` | `(recommended_plan_df, results_df)` |
+| Member 3 | `src.optimization.optimizer.optimize_country(daily_arrivals, daily_budget, agents_start, annual_salary, uplift_basis="annual", year_end_floor=False)` | `(hires, terminations)`, 12 ints each |
+| Member 3 | `src.optimization.scenarios.recommended_plan()` | `(recommended_plan_df, results_df)` for the baseline forecast, cached |
+| Member 3 | `src.optimization.scenarios.run_scenario(demand_multiplier=1.0, country=None)` | `results_df` (plus `advertisers_support_lost`); re-optimizes for the scaled demand |
+| Member 3 | `src.optimization.scenarios.sensitivity_table(multipliers=(0.8, 1.0, 1.2))` | one row per multiplier, recommended plan held fixed |
+| Member 3 | `src.optimization.scenarios.write_outputs()` | writes `outputs/plan_2026.csv` and `outputs/staffing_plan_2026.csv` |
 | Member 4 | `src.genai.assistant.answer_question(question, planning_model)` | `StaffingMemo` (Pydantic) |
 
 ## Data formats
