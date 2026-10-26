@@ -2,7 +2,9 @@
 
 Author: Mer McFadden (Role 2). For whoever assembles `notebooks/final_submission.ipynb` to paste in.
 Each block below is marked **[markdown cell]** or **[code cell]**. The code cells assume the
-notebook's setup cell has already put the repo root on `sys.path`.
+notebook's setup cell has already put the repo root on `sys.path` and defined `ROOT`. They don't
+need any variables from other sections. Text for the README, sections 7 and 8, and the video is
+at the end. See `docs/notebook/README.md` for the format.
 
 ---
 
@@ -133,12 +135,19 @@ pytest.main(["-q", str(ROOT / "tests" / "test_simulation.py")])
 > - **No cross-country help.** Agents can't cover other countries, even where language would allow it.
 > - **Identical agents.** Every agent has the same capacity from their first productive day. No attrition, ramp-up curve or absences.
 
-## For notebook section 8 (contributions)
+## For notebook section 8 (contributions and AI use)
 
 > **Mer McFadden:** set up the repository, shared interfaces and modeling assumptions; built and tested the staffing simulator (`src/simulation/`); wrote notebook section 3.
 
-## For the video (about 25 seconds)
+> **AI use (Role 2).** Claude Code (an AI coding assistant) drafted the modeling-decision wording in `docs/assumptions.md` (D3, D5, D6) for Mer to approve, wrote the simulator tests and then the simulator in `src/simulation/simulator.py`, and drafted the integration guide and this section's text, worked example and video script. Mer made the modeling decisions, and the code was checked with hand-calculable tests and an independent AI code review, whose findings (including a December-termination bug) were fixed. Details are in `docs/AI_USE.md`.
 
-> "Every number in our plan comes from a day-by-day simulator. New advertisers get an agent if one has a free slot, or wait up to 60 days. The rules: 10 advertisers per agent, 60 days of support, one month to train or terminate. In this example, an agent leaves one day before their advertisers graduate, cutting 10 advertisers' support short. The optimizer and the assistant both run plans through it."
+## For the video (about 30 seconds)
 
-*(Suggested visual: the worked-example table from section 3.)*
+> **[Show: section 3 heading and the "Rules from the challenge" list]**
+> "Every number in our plan comes from a day-by-day simulator. New advertisers get an agent if one has a free slot, or wait up to 60 days. The rules: 10 advertisers per agent, 60 days of support, one month to train or terminate."
+>
+> **[Show: the worked-example output table, pointing at the March row and `advertisers_support_lost`]**
+> "In this example, an agent leaves one day before their advertisers graduate, so 10 advertisers have their support cut short and that lost uplift comes off March's revenue."
+>
+> **[Show: the test results cell]**
+> "Small hand-checkable tests check every rule. The optimizer and the planning assistant both run their plans through this simulator."
