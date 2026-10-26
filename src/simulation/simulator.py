@@ -203,23 +203,11 @@ def simulate_plan(
     naming the country. Returns one row per country-month with RESULTS_COLUMNS plus EXTRA_COLUMNS.
     """
     _check_inputs(demand_df, staffing_plan_df, country_parameters_df)
-    demand = demand_df.assign(day=(pd.to_datetime(demand_df["date"]) - DATES[0]).dt.days)
     plan = staffing_plan_df.set_index(["country", "month"])
 
     frames = []
     for p in country_parameters_df.itertuples(index=False):
-        d = demand[demand["country"] == p.country]
-        arrivals = np.zeros(len(DATES))
-        np.add.at(arrivals, d["day"].to_numpy(), d["eligible_signups"].to_numpy())
-        country_mean = d["mean_annual_budget_usd"].mean()
-        country_mean = 0.0 if pd.isna(country_mean) else country_mean
-        budget = np.full(len(DATES), country_mean)
-        # A missing budget is harmless on a day with no sign-ups, so fill only those days;
-        # a missing budget on a day with sign-ups reaches simulate_country and is rejected.
-        no_signups = d["eligible_signups"].to_numpy() == 0
-        budget[d["day"].to_numpy()] = np.where(
-            no_signups, d["mean_annual_budget_usd"].fillna(country_mean),
-            d["mean_annual_budget_usd"])
+        arrivals, budget = daily_inputs(demand_df, p.country)
 
         def plan_column(col):
             return [plan[col].get((p.country, mo), 0) for mo in MONTHS]
@@ -235,6 +223,26 @@ def simulate_plan(
 
     out = pd.concat(frames, ignore_index=True)
     return out[RESULTS_COLUMNS + EXTRA_COLUMNS]
+
+
+def daily_inputs(demand_df: pd.DataFrame, country: str) -> tuple[np.ndarray, np.ndarray]:
+    """One country's demand rows as the length-365 (daily_arrivals, daily_budget) arrays
+    simulate_country takes. Missing days count as zero sign-ups. Used by simulate_plan
+    and the optimizer so both see the same inputs."""
+    d = demand_df[demand_df["country"] == country]
+    day = (pd.to_datetime(d["date"]) - DATES[0]).dt.days.to_numpy()
+    arrivals = np.zeros(len(DATES))
+    np.add.at(arrivals, day, d["eligible_signups"].to_numpy())
+    country_mean = d["mean_annual_budget_usd"].mean()
+    country_mean = 0.0 if pd.isna(country_mean) else country_mean
+    budget = np.full(len(DATES), country_mean)
+    # A missing budget is harmless on a day with no sign-ups, so fill only those days;
+    # a missing budget on a day with sign-ups reaches simulate_country and is rejected.
+    no_signups = d["eligible_signups"].to_numpy() == 0
+    budget[day] = np.where(
+        no_signups, d["mean_annual_budget_usd"].fillna(country_mean),
+        d["mean_annual_budget_usd"])
+    return arrivals, budget
 
 
 def _check_country_args(arrivals, budget, agents_start, hires, terminations,
