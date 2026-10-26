@@ -50,7 +50,7 @@ Countries don't share agents (D6), so each country is planned separately by `opt
 2. **Start.** The best of three plans: keep the starting staff; a demand-based plan with enough agents to hold everyone who arrived in the previous 60 days, at each month's busiest day; and 80% of that.
 3. **Local search.** Move one month's headcount, or every month from there on, up or down by a step. Keep any move that raises the country's 2026 net value, scored with `simulate_country`. Steps halve down to 1 agent.
 
-This is a heuristic, so the result isn't guaranteed to be the best possible plan. It is never worse than keeping the starting staff, since that is one of the starting candidates. On the sample data, a version that runs the full search from all three starts found plans worth 0.25% more in total ($477.6M vs $476.5M) but took three times as long, so the faster version is used. Individual countries can be further off. For example, under the 60-day basis the USA plan is about $0.4M short of the plan found for the annual basis.
+This is a heuristic, so the result isn't guaranteed to be the best possible plan. With the default settings it is never worse than keeping the starting staff, since that is one of the starting candidates. (`year_end_floor=True` can force hires that make it worse.) On the sample data, a version that runs the full search from all three starts found plans worth 0.25% more in total ($477.6M vs $476.5M) but took three times as long, so the faster version is used. Individual countries can be further off. For example, under the 60-day basis the USA plan is about $0.4M short of the plan found for the annual basis.
 
 ## Behavior to know about
 
@@ -64,7 +64,7 @@ This is a heuristic, so the result isn't guaranteed to be the best possible plan
 
 ## Tests
 
-`python -m pytest -q tests/test_optimization.py` runs 21 tests (under a minute):
+`python -m pytest -q tests/test_optimization.py` runs 23 tests (under a minute):
 - hand-checkable `optimize_country` cases: no demand, demand that starts in July, unprofitable demand, overstaffing, the 60-day revenue basis, the year-end floor and invalid inputs
 - `optimize_staffing` on two sample countries: valid plan, beats doing nothing, matches per-country results, evaluates with `simulate_fn`
 - scenarios called exactly the way `src/genai/assistant.py` calls them, plus the sensitivity table, caching, `write_outputs` and the sample-data fallback

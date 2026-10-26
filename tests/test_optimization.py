@@ -110,8 +110,10 @@ def test_year_end_need_counts_advertisers_still_in_support():
     arrivals = np.zeros(365)
     arrivals[-60:] = 1.0  # 60 advertisers arrive in the last 60 days
     assert year_end_need(arrivals) == 6
-    arrivals[-61] = 100.0  # graduated by Jan 1, 2027
+    arrivals[-60] = 100.0  # started Nov 2 (day 305), graduates on Jan 1, 2027
     assert year_end_need(arrivals) == 6
+    arrivals[-59] = 100.0  # started Nov 3, still in support on Jan 1, 2027
+    assert year_end_need(arrivals) == 16
 
 
 def test_year_end_floor_keeps_enough_agents_for_2027():
@@ -272,3 +274,25 @@ def test_write_outputs_saves_the_recommended_plan(small_inputs, tmp_path):
     plan, results = scenarios.recommended_plan()
     pd.testing.assert_frame_equal(pd.read_csv(results_path), results, check_dtype=False)
     pd.testing.assert_frame_equal(pd.read_csv(plan_path), plan, check_dtype=False)
+
+
+def test_scenarios_accept_whole_number_demand_counts(small_inputs, monkeypatch):
+    # A forecast may return integer counts; scaling them must not fail.
+    demand, params = small_inputs
+    as_ints = demand.assign(eligible_signups=demand["eligible_signups"].round().astype("int64"))
+    monkeypatch.setattr(scenarios, "load_inputs", lambda: (as_ints, params))
+    scenarios.clear_cache()
+    up = scenarios.run_scenario(1.2, country="Spain")
+    assert up[up["country"] == "Spain"]["forecast_eligible"].sum() == pytest.approx(
+        1.2 * as_ints[as_ints["country"] == "Spain"]["eligible_signups"].sum())
+
+
+def test_load_inputs_returns_copies(sample_two, monkeypatch):
+    monkeypatch.setattr(scenarios.forecast, "forecast_demand", lambda path: sample_two[0])
+    monkeypatch.setattr(scenarios.forecast, "load_country_parameters", lambda path: sample_two[1])
+    scenarios.clear_cache()
+    demand, _ = scenarios.load_inputs()
+    total = demand["eligible_signups"].sum()
+    demand["eligible_signups"] *= 2  # a notebook cell editing its copy in place
+    assert scenarios.load_inputs()[0]["eligible_signups"].sum() == pytest.approx(total)
+    scenarios.clear_cache()

@@ -19,7 +19,8 @@ Search (a documented heuristic, not a guaranteed optimum):
      down by a step; keep any change that raises net value. Steps shrink by half
      down to 1 agent. Each candidate is scored with simulate_country.
   3. Keep the best result over the three starts.
-Because "keep the starting staff" is a start, the result is never worse than it.
+With the default settings, "keep the starting staff" is a start, so the result is never
+worse than it. (year_end_floor=True can force a plan that is.)
 """
 
 import math
@@ -131,7 +132,8 @@ def optimize_staffing(
 
     Returns (recommended_plan_df, evaluated_results_df):
       recommended_plan_df  -> STAFFING_PLAN_COLUMNS
-      evaluated_results_df -> RESULTS_COLUMNS (this becomes outputs/plan_2026.csv)
+      evaluated_results_df -> RESULTS_COLUMNS plus advertisers_support_lost
+                              (this becomes outputs/plan_2026.csv)
     """
     validate(demand_df, DEMAND_COLUMNS, "demand_df")
     validate(country_parameters_df, COUNTRY_PARAMETERS_COLUMNS, "country_parameters_df")

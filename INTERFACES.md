@@ -28,7 +28,7 @@ workbook ──► forecast_demand() ──► demand_df ─┐
 | Member 3 | `src.optimization.optimizer.optimize_staffing(demand_df, country_parameters_df, simulate_fn=simulate_plan, uplift_basis="annual", year_end_floor=False)` | `(recommended_plan_df, results_df)` |
 | Member 3 | `src.optimization.optimizer.optimize_country(daily_arrivals, daily_budget, agents_start, annual_salary, uplift_basis="annual", year_end_floor=False)` | `(hires, terminations)`, 12 ints each |
 | Member 3 | `src.optimization.scenarios.recommended_plan()` | `(recommended_plan_df, results_df)` for the baseline forecast, cached |
-| Member 3 | `src.optimization.scenarios.run_scenario(demand_multiplier=1.0, country=None)` | `results_df`; re-optimizes for the scaled demand |
+| Member 3 | `src.optimization.scenarios.run_scenario(demand_multiplier=1.0, country=None)` | `results_df` (plus `advertisers_support_lost`); re-optimizes for the scaled demand |
 | Member 3 | `src.optimization.scenarios.sensitivity_table(multipliers=(0.8, 1.0, 1.2))` | one row per multiplier, recommended plan held fixed |
 | Member 3 | `src.optimization.scenarios.write_outputs()` | writes `outputs/plan_2026.csv` and `outputs/staffing_plan_2026.csv` |
 | Member 4 | `src.genai.assistant.answer_question(question, planning_model)` | `StaffingMemo` (Pydantic) |

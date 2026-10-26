@@ -48,7 +48,8 @@ def load_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
             inputs = (pd.read_csv(SAMPLE / "sample_demand.csv"),
                       pd.read_csv(SAMPLE / "sample_country_parameters.csv"))
         _cache["inputs"] = inputs
-    return _cache["inputs"]
+    demand, params = _cache["inputs"]
+    return demand.copy(), params.copy()
 
 
 def recommended_plan() -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -65,8 +66,8 @@ def recommended_plan() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 def _scaled(demand, multiplier, countries):
     rows = demand["country"].isin(countries)
-    out = demand.copy()
-    out.loc[rows, "eligible_signups"] = out.loc[rows, "eligible_signups"] * multiplier
+    out = demand.assign(eligible_signups=demand["eligible_signups"].astype(float))
+    out.loc[rows, "eligible_signups"] *= multiplier
     return out
 
 
@@ -75,7 +76,8 @@ def run_scenario(demand_multiplier: float = 1.0, country: str | None = None) -> 
 
     If `country` is given (any capitalization), only that country's demand is scaled and
     only its plan is re-optimized; every other country keeps the recommended plan.
-    Returns RESULTS_COLUMNS for all countries and months.
+    Returns RESULTS_COLUMNS (plus the simulator's advertisers_support_lost) for all
+    countries and months.
     """
     if not math.isfinite(demand_multiplier) or demand_multiplier < 0:
         raise ValueError(f"demand_multiplier must be a finite number >= 0, got {demand_multiplier!r}")
@@ -131,8 +133,8 @@ def sensitivity_table(multipliers=(0.8, 1.0, 1.2)) -> pd.DataFrame:
 
 
 def write_outputs(out_dir=ROOT / "outputs") -> list[Path]:
-    """Save the recommended plan and its results: plan_2026.csv (RESULTS_COLUMNS, 264
-    rows) and staffing_plan_2026.csv (STAFFING_PLAN_COLUMNS)."""
+    """Save the recommended plan and its results: plan_2026.csv (RESULTS_COLUMNS plus
+    advertisers_support_lost, 264 rows) and staffing_plan_2026.csv (STAFFING_PLAN_COLUMNS)."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     plan, results = recommended_plan()
