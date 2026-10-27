@@ -45,7 +45,7 @@ import re
 import pandas as pd
 
 from dotenv import load_dotenv
-from pydantic import Basemodel, Field
+from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -147,7 +147,7 @@ def collection_results(request, planning_model):
     numbers["average_month_end_waiting"] = float(
       data["advertisers_waiting"].mean()
     )
-      return numbers
+    return numbers
   baseline = get_numbers(1.0)
   alternative = (
     get_numbers(request.demand_multiplier)
