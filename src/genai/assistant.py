@@ -34,9 +34,7 @@ class StaffingMemo(BaseModel):
 def answer_question(question: str, planning_model=None) -> StaffingMemo:
     """Answer a natural-language staffing question using the planning model."""
     raise NotImplementedError
-
-_______________________________________________________________________________________________
-_______________________________________________________________________________________________
+    
 #Member 4 GenAI Planning Assistant, Owner: Enrique Mendez
 #Task: Using LangChain, structured outputs, and prompting engineering to explain staffing scenarios
 
@@ -45,7 +43,7 @@ import re
 import pandas as pd
 
 from dotenv import load_dotenv
-from pydantic import Basemodel, Field
+from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -147,7 +145,7 @@ def collection_results(request, planning_model):
     numbers["average_month_end_waiting"] = float(
       data["advertisers_waiting"].mean()
     )
-      return numbers
+    return numbers
   baseline = get_numbers(1.0)
   alternative = (
     get_numbers(request.demand_multiplier)
@@ -228,5 +226,6 @@ def answer_question(question: str, planning_model=None) -> StaffingMemo:
     )
 
 #Conduct Model Calculations and Then Having AI Explain
-results = collect_results(request, planning_model)
-return explain_results(question, request, results, llm)
+def process_and_explain_request(question, request, planning_model, llm):
+  results = collect_results(request, planning_model)
+  return explain_results(question, request, results, llm)
