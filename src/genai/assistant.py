@@ -87,6 +87,7 @@ def understand_question(question, llm):
 
 
 # 5. Run the actual staffing model
+
 def collect_results(request, planning_model):
     """Compare baseline and alternative model results."""
 
@@ -107,6 +108,7 @@ def collect_results(request, planning_model):
 
         required = [
             "country",
+            "month",
             "forecast_eligible",
             "agents_active",
             "advertisers_supported",
@@ -134,7 +136,7 @@ def collect_results(request, planning_model):
                 f"No results found for country: {request.country}"
             )
 
-        # Additive yearly totals
+        # Calculate annual totals for additive metrics
         totals = [
             "forecast_eligible",
             "advertisers_supported",
@@ -149,17 +151,22 @@ def collect_results(request, planning_model):
             for name in totals
         }
 
-        # Snapshot quantities should not be summed by month.
+        # Sum countries within each month, then average the months
+        monthly_totals = data.groupby("month")[
+            ["agents_active", "advertisers_waiting"]
+        ].sum()
+
         numbers["average_agents_active"] = float(
-            data["agents_active"].mean()
+            monthly_totals["agents_active"].mean()
         )
 
         numbers["average_month_end_waiting"] = float(
-            data["advertisers_waiting"].mean()
+            monthly_totals["advertisers_waiting"].mean()
         )
 
         return numbers
 
+    # Compare the baseline and requested scenario
     baseline = get_numbers(1.0)
 
     if request.demand_multiplier == 1.0:
@@ -177,7 +184,6 @@ def collect_results(request, planning_model):
         "alternative": alternative,
         "difference": difference
     }
-
 
 # 6. Generate an explanation grounded in model outputs
 def explain_results(question, request, results, llm):
@@ -222,28 +228,39 @@ def explain_results(question, request, results, llm):
 
 
 # 7. Public interface used by the notebook
+
 def answer_question(
     question: str,
     planning_model=None
 ) -> StaffingMemo:
-    """Answer a staffing question using the quantitative model."""
+    """
+    Interpret a staffing question, run the planning model,
+    and explain the results using the GenAI assistant.
+    """
 
+    # Validate the user's question
     if not isinstance(question, str) or not question.strip():
-        raise ValueError("Please enter a staffing question.")
+        raise ValueError(
+            "Please enter a staffing question."
+        )
 
+    # Initialize the language model
     llm = get_model()
 
+    # Convert the question into a structured scenario request
     request = understand_question(question, llm)
 
-    if request.question_type not in (
+    # Validate the question type
+    if request.question_type.strip().lower() not in (
         "what_if",
         "explain",
-        "compare"
+        "compare",
     ):
         raise ValueError(
             "Unsupported staffing question type."
         )
 
+    # Validate the demand multiplier
     if (
         not math.isfinite(request.demand_multiplier)
         or request.demand_multiplier <= 0
@@ -252,26 +269,38 @@ def answer_question(
             "Demand multiplier must be positive and finite."
         )
 
+    # Check for unsupported budget changes
     lower_question = question.lower()
 
-    if (
-        "budget" in lower_question
-        and any(
-            word in lower_question
-            for word in (
-                "increase", "decrease", "rise",
-                "grow", "drop", "reduce"
-            )
+    if "budget" in lower_question and any(
+        word in lower_question
+        for word in (
+            "increase",
+            "decrease",
+            "rise",
+            "grow",
+            "drop",
+            "reduce",
         )
     ):
         raise ValueError(
             "Changing advertiser budgets is not supported."
         )
 
+    # Check for unsupported single-month demand scenarios
     month_names = (
-        "january", "february", "march", "april",
-        "may", "june", "july", "august",
-        "september", "october", "november", "december"
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
     )
 
     if (
@@ -286,8 +315,13 @@ def answer_question(
             "not one selected month."
         )
 
-    results = collect_results(request, planning_model)
+    # Run the staffing model and collect calculated results
+    results = collect_results(
+        request,
+        planning_model
+    )
 
+    # Generate an explanation grounded in the model results
     memo = explain_results(
         question,
         request,

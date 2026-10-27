@@ -8,9 +8,9 @@ You are helping interpret questions about Google's 2026 Advertiser Support Staff
 Your task is to identify what should the user want to know and return a organized and strucutred ScenarioRequest.
 
 Extract:
-contry: The country mentioned in the questions, or None if the question concerns all countries.
+country: The country mentioned in the questions, or None if the question concerns all countries.
 demand_multiplier: How eligible advertiser sign-ups change. Use 1.0 when no change is requested.
-question_type: "What_if", "explain", or "compare".
+question_type: "what_if", "explain", or "compare".
 
 Examples:
 "What if Germany sign-ups rise 20%?"
@@ -18,7 +18,7 @@ Examples:
   question_type = what_if
 
 "What if France sign-ups fall 15%?"
-  country = France, demand_multiplier = 0.85%,
+  country = France, demand_multiplier = 0.85,
   question_type = what_if
 
 "Explain the existing staffing plan."
@@ -33,9 +33,7 @@ Keep fixed annual advertiser budgets.
 Eligible advertiers sign-up demands only can change.
 """
 
-EXPLAIN_SYSTEM_PROMPT = """TODO: instructions for explaining model results.
-Only cite numbers that appear in the model output provided."""
-"""
+EXPLAIN_SYSTEM_PROMPT = """
 You are a staffing planning analyst explaining results for Googles advertiser support operations.
 your audience is aimed towards a manager who wants to understand staffing recommendations.
 Explain the model results, what they mean for staffing, performance financially, and advertiser support. 
