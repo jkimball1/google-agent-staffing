@@ -72,18 +72,28 @@ pytest
 
 See [docs/architecture.md](docs/architecture.md) for the diagram and [docs/assumptions.md](docs/assumptions.md) for the modeling decisions.
 
+## Components
+
+**Data and forecasting (Jasper Kimball).** `src/forecasting/forecast.py` reads the course workbook, fixes the 920 invalid 2025-02-29 dates by spreading them over February, and keeps only eligible advertisers (budget strictly above the country threshold). It forecasts daily eligible sign-ups for every country in 2026 as 2025's level × the shared 2024→2025 trend (−1.5%) × a monthly seasonal profile with an October–December peak. It also returns each country's average advertiser budget and the country parameters (salary, threshold, starting headcount). Its output, `demand_df`, feeds the simulator, the optimizer and the planning assistant. Tests are in `tests/test_forecasting.py`.
+
+**Staffing simulation (Mer McFadden).** `src/simulation/simulator.py` plays out a staffing plan day by day for each country, then summarizes it by month. It applies the challenge's rules: 10 advertisers per agent, 60-day support, a 60-day waiting limit, one month of training, and one month's notice with a 40% termination cost. For each country and month it reports headcount, advertisers supported, waiting and expired, utilization, revenue uplift, and costs. The optimizer, the sensitivity analysis and the planning assistant all use it to evaluate staffing plans. See `src/simulation/README.md` for how to call it, and `tests/test_simulation.py` for hand-checkable test cases.
+
+**Staffing optimization and scenarios (Mer McFadden).** `src/optimization/optimizer.py` chooses monthly hires and terminations for each of the 22 countries to maximize 2026 net value: revenue uplift minus salaries and termination costs. It starts from either the current headcount or a demand-based plan, then improves it with a local search that scores each candidate plan with the simulator. `src/optimization/scenarios.py` provides the recommended plan, the ±20% sensitivity table, and `run_scenario`, which re-plans under different demand and is what the GenAI assistant calls. `python -m src.optimization.optimizer` writes `outputs/plan_2026.csv`. See `src/optimization/README.md` for how to call it, and `tests/test_optimization.py` for test cases.
+
+*GenAI planning assistant (Enrique Mendez): description to come from `docs/notebook/section6_genai.md`.*
+
 ## Team and contributions
 
 | Role | Member | Folder | Branch | Notebook sections |
 |---|---|---|---|---|
-| 1. Data & forecasting | TBD | `src/forecasting/` | `feature/forecasting` | 2 |
+| 1. Data & forecasting | Jasper Kimball | `src/forecasting/` | `feature/forecasting` | 2 |
 | 2. Staffing simulation | Mer McFadden (@mcfadd22) | `src/simulation/` | `feature/simulation` | 3 |
 | 3. Optimization & financials | Mer McFadden (@mcfadd22) | `src/optimization/` | `feature/optimization` | 4, 5 |
 | 4. GenAI app & notebook integration | Enrique Mendez | `src/genai/`, `notebooks/` | `feature/genai` | 6 |
 
 Shared by everyone: sections 1, 7, and 8, documentation for your own module, a segment of the video, and review of other members' PRs.
 
-Video assembly: TBD · Canvas submission: TBD
+README, video assembly and Canvas submission: Jasper Kimball
 
 ## How we work
 
