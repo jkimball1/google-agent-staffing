@@ -15,7 +15,7 @@ The project combines four components:
 3. **Optimization and financial evaluation:** compare staffing strategies on operational performance, estimated incremental advertising revenue, staffing costs, and demand uncertainty.
 4. **GenAI planning assistant:** a natural-language interface for exploring staffing recommendations, evaluating alternative scenarios, and generating structured explanations.
 
-The final application will produce a month-by-month staffing plan for 2026, financial and operational comparisons, sensitivity analyses, and AI-generated explanations grounded in the planning model.
+The application produces a month-by-month staffing plan for 2026, financial and operational comparisons, sensitivity analyses, and AI-generated explanations grounded in the planning model. On the 2026 forecast (about 104,000 eligible advertisers), the recommended plan is worth **$466.0M** in net value, against **$354.4M** for keeping the starting staff.
 
 ### Development approach
 
@@ -25,16 +25,16 @@ The application uses course GenAI techniques, including LangChain, structured ou
 
 ### Deliverables
 
-- [ ] Executed Jupyter notebook: [`notebooks/final_submission.ipynb`](notebooks/final_submission.ipynb)
-- [ ] 2026 monthly staffing plan for all 22 countries (264 rows): `outputs/plan_2026.csv`
-- [ ] Analysis of staffing decisions, financial outcomes, assumptions, and demand sensitivity
-- [ ] This repository: code, setup instructions, architecture, team contributions
-- [ ] Three-minute demo video: *link TBD*
+- [x] Executed Jupyter notebook: [`notebooks/final_submission.ipynb`](notebooks/final_submission.ipynb)
+- [x] 2026 monthly staffing plan for all 22 countries (264 rows): [`outputs/plan_2026.csv`](outputs/plan_2026.csv)
+- [x] Analysis of staffing decisions, financial outcomes, assumptions, and demand sensitivity (notebook sections 4, 5 and 7)
+- [x] This repository: code, setup instructions, architecture, team contributions
+- [x] Three-minute demo video: [`video/Video Submission.mov`](https://github.com/mcfadd22/google-agent-staffing/blob/main/video/Video%20Submission.mov) (2:55; click **View raw** or the download button to play it)
 
 ## Setup
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/mcfadd22/google-agent-staffing.git
 cd google-agent-staffing
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -80,7 +80,7 @@ See [docs/architecture.md](docs/architecture.md) for the diagram and [docs/assum
 
 **Staffing optimization and scenarios (Mer McFadden).** `src/optimization/optimizer.py` chooses monthly hires and terminations for each of the 22 countries to maximize 2026 net value: revenue uplift minus salaries and termination costs. It starts from either the current headcount or a demand-based plan, then improves it with a local search that scores each candidate plan with the simulator. `src/optimization/scenarios.py` provides the recommended plan, the ±20% sensitivity table, and `run_scenario`, which re-plans under different demand and is what the GenAI assistant calls. `python -m src.optimization.optimizer` writes `outputs/plan_2026.csv`. See `src/optimization/README.md` for how to call it, and `tests/test_optimization.py` for test cases.
 
-*GenAI planning assistant (Enrique Mendez): description to come from `docs/notebook/section6_genai.md`.*
+**GenAI planning assistant (Enrique Mendez).** `src/genai/assistant.py` lets someone ask a staffing question in plain English, such as "What if eligible sign-ups in Germany rise 20% in 2026?". `answer_question` uses a LangChain chain with structured output to turn the question into a `ScenarioRequest` (country, demand multiplier, question type), then calls `run_scenario` to re-plan with the optimizer under that demand and compares it with the baseline. A second chain turns those results into a `StaffingMemo` with a summary, recommended changes, assumptions and risks. The memo's `key_numbers` are always replaced with the model's own calculated values, so the LLM explains the numbers but never produces them. Prompts are in `src/genai/prompts.py`. It uses OpenAI (`gpt-4o-mini` by default, set `OPENAI_MODEL` to change) and needs `OPENAI_API_KEY` in `.env`.
 
 ## Team and contributions
 
@@ -94,6 +94,8 @@ See [docs/architecture.md](docs/architecture.md) for the diagram and [docs/assum
 Shared by everyone: sections 1, 7, and 8, documentation for your own module, a segment of the video, and review of other members' PRs.
 
 README, video assembly and Canvas submission: Jasper Kimball
+
+Travis Hoa was also assigned to the group but did not take part in this project; he separately submitted a different project (CardScout AI).
 
 ## How we work
 
