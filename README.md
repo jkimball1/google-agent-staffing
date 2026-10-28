@@ -29,7 +29,7 @@ The application uses course GenAI techniques, including LangChain, structured ou
 - [x] 2026 monthly staffing plan for all 22 countries (264 rows): [`outputs/plan_2026.csv`](outputs/plan_2026.csv)
 - [x] Analysis of staffing decisions, financial outcomes, assumptions, and demand sensitivity (notebook sections 4, 5 and 7)
 - [x] This repository: code, setup instructions, architecture, team contributions
-- [ ] Three-minute demo video: *link to be added at submission* (file: [`video/Video Submission.mov`](video/Video%20Submission.mov))
+- [x] Three-minute demo video: [`video/Video Submission.mov`](https://github.com/mcfadd22/google-agent-staffing/blob/main/video/Video%20Submission.mov) (2:55; click **View raw** or the download button to play it)
 
 ## Setup
 
