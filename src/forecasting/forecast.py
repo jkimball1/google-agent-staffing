@@ -18,6 +18,7 @@ Forecasts 2026 eligible advertiser arrivals per country (see docs/assumptions.md
 """
 
 from functools import lru_cache
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -33,6 +34,10 @@ MONTHS_2026 = [f"2026-{m:02d}" for m in range(1, 13)]
 @lru_cache(maxsize=2)
 def _read_workbook(workbook_path: str) -> dict[str, pd.DataFrame]:
     # Reading the 500k-row sheet takes several seconds; both public loaders need it.
+    if not Path(workbook_path).exists():
+        raise FileNotFoundError(
+            f"Course workbook not found at {workbook_path}. It isn't included in the repo; "
+            "put your copy at data/raw/DADS5250_Hackathon_Google_Data.xlsx (see data/raw/README.md).")
     return pd.read_excel(workbook_path, sheet_name=None)
 
 

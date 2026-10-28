@@ -29,19 +29,25 @@ The application uses course GenAI techniques, including LangChain, structured ou
 - [x] 2026 monthly staffing plan for all 22 countries (264 rows): [`outputs/plan_2026.csv`](outputs/plan_2026.csv)
 - [x] Analysis of staffing decisions, financial outcomes, assumptions, and demand sensitivity (notebook sections 4, 5 and 7)
 - [x] This repository: code, setup instructions, architecture, team contributions
-- [x] Three-minute demo video: [`video/Video Submission.mov`](https://github.com/mcfadd22/google-agent-staffing/blob/main/video/Video%20Submission.mov) (2:55; click **View raw** or the download button to play it)
+- [x] Three-minute demo video: [`video/Video Submission.mov`](https://github.com/jkimball1/google-agent-staffing/blob/main/video/Video%20Submission.mov) (2:55; click **View raw** or the download button to play it)
 
 ## Setup
 
 ```bash
-git clone https://github.com/mcfadd22/google-agent-staffing.git
+git clone https://github.com/jkimball1/google-agent-staffing.git
 cd google-agent-staffing
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env                                 # then add your API key
 ```
 
-The course workbook is already in `data/raw/` (see [`data/raw/README.md`](data/raw/README.md)). The repo must stay private because of it.
+**Add the course workbook before running anything.** It's for course use only, so it isn't in this repo. Put your copy at exactly:
+
+```
+data/raw/DADS5250_Hackathon_Google_Data.xlsx
+```
+
+The forecast, the optimizer, the notebook and most tests read it from there (see [`data/raw/README.md`](data/raw/README.md)). `.gitignore` keeps it from being committed.
 
 Check that everything is wired up:
 
@@ -54,7 +60,7 @@ pytest
 ```
 ├── INTERFACES.md            shared function signatures and data formats (read this first)
 ├── data/
-│   ├── raw/                 course workbook (committed; keep repo private)
+│   ├── raw/                 put the course workbook here (not committed)
 │   └── sample/              stand-in files for independent development (not results)
 ├── src/
 │   ├── schemas.py           column contracts + validate()
@@ -104,7 +110,7 @@ Travis Hoa was also assigned to the group but did not take part in this project;
 3. **Don't change a contract alone.** Changes to `INTERFACES.md` and `src/schemas.py` need the affected owners to agree.
 4. **Open a PR** when your piece works. At least one other member reviews before merging. Keep `main` runnable.
 5. **Only the Member 4 owner edits the final notebook.** Everyone else puts code in `src/` and sends notebook text and plots to them through their PR or Issue.
-6. **Never commit** `.env` or API keys. **Keep the repo private**, because it contains the course data.
+6. **Never commit** `.env` or API keys. **Never commit** the course workbook; it's for course use only.
 7. **Log AI use** in [docs/AI_USE.md](docs/AI_USE.md) as you go.
 
 ## Timeline

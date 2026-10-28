@@ -1,8 +1,12 @@
 # Raw data
 
-The course workbook, `DADS5250_Hackathon_Google_Data.xlsx`, is committed here, so cloning the repo gets you the data.
+The course workbook is **not included** in this repo: it's for course use only. To run the code, put your copy here, with this exact name:
 
-The course hasn't said whether the data may be redistributed, so **keep this repo private**. At submission, add the teaching team as collaborators instead of making the repo public. Don't edit the workbook; do all cleaning in code.
+```
+data/raw/DADS5250_Hackathon_Google_Data.xlsx
+```
+
+`.gitignore` ignores everything in this folder except this README, so the workbook is never committed. Don't edit the workbook; do all cleaning in code.
 
 | Sheet | Rows | Columns |
 |---|---|---|

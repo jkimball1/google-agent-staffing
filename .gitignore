@@ -1,10 +1,10 @@
 # Secrets
 .env
 
-# Raw data: only the course workbook is tracked (repo stays private)
+# Raw data: the course workbook is for course use only and is never committed.
+# Put your own copy at data/raw/DADS5250_Hackathon_Google_Data.xlsx (see data/raw/README.md).
 data/raw/*
 !data/raw/README.md
-!data/raw/DADS5250_Hackathon_Google_Data.xlsx
 
 # Python
 __pycache__/
